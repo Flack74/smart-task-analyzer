@@ -1,0 +1,58 @@
+[
+  {
+    "id": "fix_api_crash",
+    "title": "Fix critical production bug - API crash",
+    "due_date": "2025-11-27",
+    "estimated_hours": 1,
+    "importance": 10,
+    "dependencies": []
+  },
+  {
+    "id": "deploy_security_patch",
+    "title": "Deploy security patch immediately",
+    "due_date": "2025-11-26",
+    "estimated_hours": 2,
+    "importance": 9,
+    "dependencies": ["fix_api_crash"]
+  },
+  {
+    "id": "refactor_auth",
+    "title": "Refactor authentication module",
+    "due_date": "2025-12-10",
+    "estimated_hours": 8,
+    "importance": 6,
+    "dependencies": []
+  },
+  {
+    "id": "user_profile_feature",
+    "title": "Implement user profile feature",
+    "due_date": "2025-12-15",
+    "estimated_hours": 6,
+    "importance": 5,
+    "dependencies": ["refactor_auth"]
+  },
+  {
+    "id": "update_api_docs",
+    "title": "Update documentation for old API",
+    "due_date": "2026-02-01",
+    "estimated_hours": 3,
+    "importance": 2,
+    "dependencies": ["user_profile_feature"]
+  },
+  {
+    "id": "research_framework",
+    "title": "Research new framework for future project",
+    "due_date": "2026-03-15",
+    "estimated_hours": 10,
+    "importance": 1,
+    "dependencies": []
+  },
+  {
+    "id": "organize_kb",
+    "title": "Organize team knowledge base",
+    "due_date": "2026-01-30",
+    "estimated_hours": 5,
+    "importance": 3,
+    "dependencies": ["update_api_docs"]
+  }
+]
