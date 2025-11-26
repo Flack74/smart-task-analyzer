@@ -1,0 +1,127 @@
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #0b1020;
+    color: #f5f5f5;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+h1, h2, h3 {
+    margin-bottom: 0.75rem;
+}
+
+.input-section, .output-section {
+    background: #151a2c;
+    padding: 1rem 1.2rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+}
+
+.form-row {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.75rem;
+}
+
+.form-row label {
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    opacity: 0.9;
+}
+
+input, textarea, select, button {
+    border-radius: 6px;
+    border: 1px solid #343b52;
+    background: #0f1423;
+    color: #f5f5f5;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.95rem;
+}
+
+textarea {
+    resize: vertical;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    margin-top: 0.35rem;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.button-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.task-card {
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-bottom: 0.6rem;
+    background: #151b30;
+    border-left: 4px solid #555;
+}
+
+.task-card.high {
+    border-left-color: #ff4d4f;
+}
+
+.task-card.medium {
+    border-left-color: #faad14;
+}
+
+.task-card.low {
+    border-left-color: #52c41a;
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.task-title {
+    font-weight: 600;
+}
+
+.score-badge {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.task-meta {
+    font-size: 0.8rem;
+    opacity: 0.85;
+    margin-top: 0.25rem;
+}
+
+.task-explanation {
+    font-size: 0.8rem;
+    margin-top: 0.4rem;
+}
+
+#message {
+    margin-top: 0.6rem;
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 0.75rem;
+    }
+}

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Smart Task Analyzer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #0b1020;
+    color: #f5f5f5;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+h1, h2, h3 {
+    margin-bottom: 0.75rem;
+}
+
+.input-section, .output-section {
+    background: #151a2c;
+    padding: 1rem 1.2rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+}
+
+.form-row {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.75rem;
+}
+
+.form-row label {
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    opacity: 0.9;
+}
+
+input, textarea, select, button {
+    border-radius: 6px;
+    border: 1px solid #343b52;
+    background: #0f1423;
+    color: #f5f5f5;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.95rem;
+}
+
+textarea {
+    resize: vertical;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    margin-top: 0.35rem;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.button-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.task-card {
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-bottom: 0.6rem;
+    background: #151b30;
+    border-left: 4px solid #555;
+}
+
+.task-card.high {
+    border-left-color: #ff4d4f;
+    background: #1a0f0f;
+}
+
+.task-card.medium {
+    border-left-color: #faad14;
+    background: #1a1410;
+}
+
+.task-card.low {
+    border-left-color: #52c41a;
+    background: #0f1a0f;
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.task-title {
+    font-weight: 600;
+}
+
+.score-badge {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.task-meta {
+    font-size: 0.8rem;
+    opacity: 0.85;
+    margin-top: 0.25rem;
+}
+
+.task-explanation {
+    font-size: 0.8rem;
+    margin-top: 0.4rem;
+    color: #d0d0d0;
+}
+
+#message {
+    margin-top: 0.6rem;
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 0.75rem;
+    }
+}
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Smart Task Analyzer</h1>
+
+    <section class="input-section">
+        <h2>Add Task</h2>
+        <form id="task-form">
+            <div class="form-row">
+                <label>Title</label>
+                <input type="text" id="title" required>
+            </div>
+            <div class="form-row">
+                <label>Due Date</label>
+                <input type="date" id="due_date">
+            </div>
+            <div class="form-row">
+                <label>Estimated Hours</label>
+                <input type="number" id="estimated_hours" min="0" step="0.5" required>
+            </div>
+            <div class="form-row">
+                <label>Importance (1-10)</label>
+                <input type="number" id="importance" min="1" max="10" required>
+            </div>
+            <div class="form-row">
+                <label>Dependencies (IDs, comma-separated)</label>
+                <input type="text" id="dependencies" placeholder="e.g. task_0,foo123">
+            </div>
+            <button type="submit">Add Task</button>
+        </form>
+
+        <h3>Or paste JSON tasks</h3>
+        <textarea id="json-input" rows="6"
+                  placeholder='[{"id": "1", "title": "Fix bug", ...}]'></textarea>
+        <button id="load-json-btn">Load JSON</button>
+
+        <div class="form-row">
+            <label>Sorting Strategy</label>
+            <select id="strategy">
+                <option value="smart_balance">Smart Balance</option>
+                <option value="fastest_wins">Fastest Wins</option>
+                <option value="high_impact">High Impact</option>
+                <option value="deadline_driven">Deadline Driven</option>
+            </select>
+        </div>
+
+        <div class="button-row">
+            <button id="analyze-btn">Analyze Tasks</button>
+            <button id="suggest-btn">Suggest Today's Top 3</button>
+        </div>
+    </section>
+
+    <section class="output-section">
+        <h2>Tasks</h2>
+        <div id="legend" style="font-size: 0.85rem; margin-bottom: 1rem; opacity: 0.8;">
+            <span style="color: #ff4d4f;">■ High Priority (0.75+)</span> | 
+            <span style="color: #faad14;">■ Medium Priority (0.5-0.74)</span> | 
+            <span style="color: #52c41a;">■ Low Priority (&lt;0.5)</span>
+        </div>
+        <div id="tasks-list"></div>
+        <div id="message"></div>
+    </section>
+</div>
+
+<script>
+const tasks = [];
+let nextInternalId = 0;
+
+const taskForm = document.getElementById("task-form");
+const jsonInput = document.getElementById("json-input");
+const loadJsonBtn = document.getElementById("load-json-btn");
+const strategySelect = document.getElementById("strategy");
+const analyzeBtn = document.getElementById("analyze-btn");
+const suggestBtn = document.getElementById("suggest-btn");
+const tasksList = document.getElementById("tasks-list");
+const messageDiv = document.getElementById("message");
+
+function renderTasks(list) {
+    tasksList.innerHTML = "";
+    list.forEach(task => {
+        const score = task.score ?? 0;
+        let priorityClass = "low";
+        if (score >= 0.75) priorityClass = "high";
+        else if (score >= 0.5) priorityClass = "medium";
+
+        const card = document.createElement("div");
+        card.className = `task-card ${priorityClass}`;
+
+        card.innerHTML = `
+      <div class="task-header">
+        <div class="task-title">${task.title || "(no title)"}</div>
+        <div class="score-badge">Score: ${score.toFixed(3)}</div>
+      </div>
+      <div class="task-meta">
+        <div>Due: ${task.due_date || "none"}</div>
+        <div>Estimated Hours: ${task.estimated_hours}</div>
+        <div>Importance: ${task.importance}</div>
+        <div>Dependencies: ${(task.dependencies || []).join(", ") || "none"}</div>
+      </div>
+      <div class="task-explanation">
+        ${task.explanation || ""}
+      </div>
+    `;
+        tasksList.appendChild(card);
+    });
+}
+
+function showMessage(text, isError = false) {
+    messageDiv.textContent = text;
+    messageDiv.style.color = isError ? "#ff4d4f" : "#f5f5f5";
+}
+
+taskForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const title = document.getElementById("title").value.trim();
+    const due_date = document.getElementById("due_date").value || null;
+    const estimated_hours = parseFloat(document.getElementById("estimated_hours").value);
+    const importance = parseInt(document.getElementById("importance").value, 10);
+    const depsRaw = document.getElementById("dependencies").value.trim();
+
+    if (!title || isNaN(estimated_hours) || isNaN(importance)) {
+        showMessage("Please fill in title, estimated hours and importance.", true);
+        return;
+    }
+
+    const dependencies = depsRaw
+        ? depsRaw.split(",").map(s => s.trim()).filter(Boolean)
+        : [];
+
+    const task = {
+        id: `task_${nextInternalId++}`,
+        title,
+        due_date,
+        estimated_hours,
+        importance,
+        dependencies
+    };
+
+    tasks.push(task);
+    renderTasks(tasks);
+    taskForm.reset();
+    showMessage("Task added.");
+});
+
+loadJsonBtn.addEventListener("click", () => {
+    const raw = jsonInput.value.trim();
+    if (!raw) {
+        showMessage("Please paste JSON first.", true);
+        return;
+    }
+
+    try {
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) {
+            showMessage("JSON must be an array of tasks.", true);
+            return;
+        }
+        tasks.length = 0;
+        parsed.forEach(t => tasks.push(t));
+        renderTasks(tasks);
+        showMessage("Tasks loaded from JSON.");
+    } catch (err) {
+        console.error(err);
+        showMessage("Invalid JSON.", true);
+    }
+});
+
+async function callAnalyze() {
+    if (!tasks.length) {
+        showMessage("No tasks to analyze.", true);
+        return;
+    }
+
+    const strategy = strategySelect.value;
+    const payload = {
+        tasks: tasks,
+        strategy: strategy
+    };
+
+    showMessage("Analyzing tasks...");
+    try {
+        const res = await fetch("/api/tasks/analyze/", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || "Server error");
+        }
+
+        const data = await res.json();
+        renderTasks(data);
+        showMessage(`Tasks analyzed with "${strategy}" strategy.`);
+    } catch (err) {
+        console.error(err);
+        showMessage(err.message, true);
+    }
+}
+
+async function callSuggest() {
+    if (!tasks.length) {
+        showMessage("No tasks to analyze.", true);
+        return;
+    }
+
+    const strategy = strategySelect.value;
+    const encodedTasks = encodeURIComponent(JSON.stringify(tasks));
+    const url = `/api/tasks/suggest/?strategy=${strategy}&tasks=${encodedTasks}`;
+
+    showMessage("Fetching top 3 suggestions...");
+    try {
+        const res = await fetch(url, {method: "GET"});
+
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || "Server error");
+        }
+
+        const data = await res.json();
+        renderTasks(data);
+        showMessage(`Top 3 tasks to work on today (${strategy}).`);
+    } catch (err) {
+        console.error(err);
+        showMessage(err.message, true);
+    }
+}
+
+analyzeBtn.addEventListener("click", callAnalyze);
+suggestBtn.addEventListener("click", callSuggest);
+</script>
+</body>
+</html>
